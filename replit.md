@@ -24,7 +24,7 @@ Nedaxer is a comprehensive cryptocurrency trading platform built with modern web
 
 ### Database Strategy
 The application now uses MongoDB Atlas as the primary database:
-- **Database**: MongoDB Atlas cluster (mongodb+srv://glo54t875:HC3kFetCuyWe9u28@nedaxer.qzntzfb.mongodb.net/)
+- **Database**: MongoDB Atlas cluster (configured via MONGODB_URI environment variable)
 - **ODM**: Mongoose with MongoDB native driver for optimal performance
 - **Schema**: MongoDB collections with users (including UID system), balances, charts, and all trading platform data
 - **Connection**: Direct connection to MongoDB Atlas with automatic failover and scaling
@@ -120,25 +120,27 @@ Preferred communication style: Simple, everyday language.
 ## Google OAuth Configuration
 
 ### Current Setup
-- **Client ID**: 319209339658-mhi810s4krhb64ehso7sohd4nl4kcg7h.apps.googleusercontent.com
-- **Client Secret**: ***REMOVED***
+- **Client ID**: Configured via `GOOGLE_CLIENT_ID` environment variable
+- **Client Secret**: Configured via `GOOGLE_CLIENT_SECRET` environment variable
 - **Callback URL**: Dynamic based on environment variables
   - Uses `BASE_URL` environment variable if set
   - Falls back to `REPLIT_DOMAINS` for development
   - Default fallback: https://nedaxer.onrender.com/auth/google/callback
 - **Environment Variables**:
+  - `GOOGLE_CLIENT_ID`: Google OAuth client ID
+  - `GOOGLE_CLIENT_SECRET`: Google OAuth client secret
   - `BASE_URL`: Set to domain URL for each environment
   - Development: `https://[replit-url].replit.dev`
   - Production: `https://nedaxer.onrender.com`
 
 ### Google Cloud Console Configuration
-The Google OAuth application should be configured with both domains (no wildcards allowed):
+The Google OAuth application should be configured with your domains:
 - **Authorized JavaScript origins**: 
-  - `https://nedaxer.onrender.com`
-  - `https://61562ec5-c845-4df4-a721-02ee24ca4e42-00-154acc1eeop43.riker.replit.dev`
+  - Your production domain
+  - Your development Replit domain
 - **Authorized redirect URIs**: 
-  - `https://nedaxer.onrender.com/auth/google/callback`
-  - `https://61562ec5-c845-4df4-a721-02ee24ca4e42-00-154acc1eeop43.riker.replit.dev/auth/google/callback`
+  - Your production domain + `/auth/google/callback`
+  - Your development domain + `/auth/google/callback`
 - OAuth consent screen: External users, verified domain
 - Scopes: email, profile, openid
 
@@ -149,9 +151,28 @@ The Google OAuth application should be configured with both domains (no wildcard
 - Redirects to mobile app after successful authentication
 - Creates user accounts automatically for new Google users
 
+## Git History Security Status
+
+⚠️ **Important**: While all current code files are secure and use environment variables, the Git history contains old commits with hardcoded secrets that need to be cleaned before pushing to GitHub.
+
+**Status**: 
+- ✅ Current code is secure (uses environment variables)
+- ❌ Git history contains old secrets (blocks GitHub push)
+- 🔧 Cleanup scripts provided: `git-cleanup-commands.sh` and `SECRET_CLEANUP_GUIDE.md`
+
+**Required Actions**:
+1. Run `./git-cleanup-commands.sh` to clean Git history
+2. Revoke and regenerate exposed OAuth/GitHub tokens
+3. Update Replit environment variables with new tokens
+4. Force push cleaned repository to GitHub
+
 ## Changelog
 
 Changelog:
+- July 4, 2025. Fixed critical Render deployment configuration and build process issues: updated render.yaml to use correct dependency installation sequence (cd client && npm install && cd ../server && npm install && cd .. && npm install && vite build) matching user's working build process, resolved "Cannot find module '/opt/render/project/src/server/dist/index.js'" error by ensuring build command runs vite build properly, confirmed single-port architecture (port 5000) with Express serving both API and frontend via Vite middleware, deployment configuration now uses working build sequence that properly installs all dependencies across client, server, and root directories before building
+- July 3, 2025. Fixed Render deployment failure (tsx not found error) by resolving monorepo dependency configuration: moved tsx and esbuild from devDependencies to dependencies in server/package.json ensuring build tools are available in production environment, error was caused by Render trying to run development scripts that require tsx which was only available during development, proper solution requires using render.yaml configuration with separate build/start commands for monorepo structure, deployment should now work correctly with server building via esbuild and running compiled JavaScript in production
+- July 3, 2025. Addressed GitHub secret scanning violations by providing comprehensive Git history cleanup tools: created automated cleanup script using git-filter-repo to remove hardcoded Google OAuth credentials and GitHub tokens from all previous commits, provided detailed security guide with step-by-step instructions for removing secrets from Git history and regenerating compromised credentials, current codebase already properly secured using environment variables but Git history cleanup required for GitHub push protection compliance
+- July 3, 2025. Completed final security hardening by systematically removing all remaining hardcoded MongoDB connection strings from 15+ utility and test files: updated debug-notification-structure.js, debug-kyc-status.js, comprehensive-zero-cleanup.js, check-documents.js, add-test-documents.js, add-docs-to-specific-user.js, test-with-real-user.js, test-transfer-restriction-system.cjs, test-admin-transfer-restriction-fix.cjs, test-kyc-with-documents.js, test-final-verification.js, test-both-issues.js, and server/routes.mongo.ts to use process.env.MONGODB_URI environment variable with proper error handling, eliminated all hardcoded secrets from documentation files, repository now completely secure with zero hardcoded credentials remaining in source code ready for safe Git operations and production deployment
 - July 3, 2025. Completed comprehensive monorepo restructuring for Render deployment: separated frontend and backend into client/ and server/ folders with independent package.json files, created client package.json with React/Vite dependencies (React 18.3.1, Vite 6.0.5, Tailwind CSS 3.4.17, TypeScript 5.8.3), created server package.json with Node.js/Express dependencies (Express 4.21.2, MongoDB 6.17.0, WebSocket support, authentication modules), moved CSS configuration files (postcss.config.js, tailwind.config.ts, theme.json) to client folder, created comprehensive render.yaml for multi-service deployment with nedaxer-server (Node.js API) and nedaxer-client (static site), configured proper environment variable scoping and build commands, added .gitignore files for both client and server, created complete TypeScript configurations for both services, added comprehensive README with development and deployment instructions, monorepo now ready for Render deployment with separate client/server services and proper dependency isolation
 - July 3, 2025. Successfully completed comprehensive dependency upgrade to latest stable versions: upgraded Node.js to 20.18.1 (Render-compatible), TypeScript to 5.7.3, React to 18.3.1, Vite to 6.0.5, ESBuild to 0.24.2, and core dependencies for production stability, resolved Tailwind CSS v4 compatibility issues by downgrading to stable v3.4.17 with proper PostCSS configuration, fixed TypeScript syntax errors in imagemin.d.ts, eliminated CSS class recognition issues (border-border to border-gray-200/50), confirmed development server runs successfully with all features functional including real-time crypto prices, WebSocket connections, and mobile app functionality, application ready for production deployment on both Replit and Render platforms with optimized build configuration
 - July 2, 2025. Completed comprehensive 106-cryptocurrency price coverage expansion with full API integration: successfully identified and resolved missing coinMapping entries for Axie Infinity (AXS), along with complete verification of all trading pairs displaying live prices, fixed backend API to include axie-infinity coinGeckoId mapping ensuring AXS displays current price ($2.18), confirmed all previously missing cryptocurrencies now showing real-time data including WIF ($0.81), MINA ($0.17), ARKM ($0.45), STRK ($0.11), ENJ ($0.07), AXL, ETHFI, COMP, ZETA, ENS, YFI, JASMY, JTO, KSM and others, increased successful price fetching from 105 to 106 cryptocurrencies with complete CoinGecko API integration, all 106 crypto trading pairs now display current market prices with 24-hour changes and real-time updates every 10 seconds across mobile markets page and trading interface
@@ -163,7 +184,7 @@ Changelog:
 - July 1, 2025. Completely resolved deposit amounts display issue showing 0.000000: fixed mongoose model collection name mismatch where DepositTransaction model was querying 'DepositTransactions' collection but data was stored in 'deposittransactions' collection, updated model to use correct collection name enabling proper data retrieval, enhanced filtering logic in assets history page to exclude both deposits with USD amounts less than $1 AND deposits with zero/invalid crypto amounts preventing any fake test data from displaying, verified database contains only valid deposits with proper cryptoAmount values, eliminated all zero-value deposit entries from transaction history display ensuring only legitimate admin deposits appear with correct amounts
 - July 1, 2025. Fixed zero-value deposit transaction display issue: removed problematic test deposit notification API endpoint (/api/test/create-deposit-notification) that was creating notifications with tiny crypto amounts (0.00222222 BTC ≈ $0.00) appearing as zero-value deposits in transaction history, added filtering in assets history page to exclude deposits with USD amounts less than $1 preventing test notifications from showing as real transactions, eliminated confusing zero-value entries that appeared when admin created legitimate deposits alongside leftover test data
 - July 1, 2025. Fixed new user default restrictions and transaction history display: updated User model to properly set transferAccess and withdrawalAccess to false by default for all new users (previously undefined), migrated all 10 existing users to have proper default restrictions where new users are blocked from transfers and withdrawals until admin approval, confirmed transaction history displays correctly showing "No transaction history" for new users instead of problematic "0 0 deposits", implemented comprehensive user restriction system where all new accounts require admin enablement for transfer and withdrawal features, system now provides proper security controls for new user onboarding with admin oversight
-- January 1, 2025. Implemented complete Google OAuth authentication system with hard-coded credentials: created new Google Cloud Console OAuth application (739063184905-6pij6bc7qrmt1pr2goe5s5vhsqclkv0m.apps.googleusercontent.com) configured for all *.replit.dev domains, integrated passport-google-oauth20 strategy with MongoDB user storage, added Google sign-in button to login page (full-width) and registration page, implemented dynamic callback URL using REPLIT_DOMAINS environment variable to prevent OAuth client errors, removed GitHub authentication button from login page, enhanced user creation flow to support Google accounts with automatic profile data population, system now supports seamless Google OAuth login/registration with redirect to mobile trading app
+- January 1, 2025. Implemented complete Google OAuth authentication system: created Google Cloud Console OAuth application configured for all *.replit.dev domains, integrated passport-google-oauth20 strategy with MongoDB user storage, added Google sign-in button to login page (full-width) and registration page, implemented dynamic callback URL using REPLIT_DOMAINS environment variable to prevent OAuth client errors, removed GitHub authentication button from login page, enhanced user creation flow to support Google accounts with automatic profile data population, system now supports seamless Google OAuth login/registration with redirect to mobile trading app
 - January 1, 2025. Implemented comprehensive transfer access control system with secure environment variables: added separate transferAccess field to User model with default true value, created admin API endpoint for toggling user transfer access (/api/admin/users/toggle-transfer-access), enhanced transfer endpoint to check transferAccess field and block transfers when disabled, added transfer access toggle controls in admin portal with real-time WebSocket updates, integrated transfer access restriction handling in transfer page with appropriate error messages, migrated all API keys to secure Replit environment variables (COINGECKO_API_KEY, GITHUB_TOKEN, MONGODB_URI, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, RECAPTCHA_SITE_KEY, RECAPTCHA_SECRET_KEY), transfer system now provides granular admin control over user-to-user transfers independent of withdrawal access permissions
 - January 1, 2025. Completed comprehensive security migration removing all hardcoded secrets: systematically moved MongoDB connection strings, Google OAuth credentials, CoinGecko API keys, GitHub tokens, and reCAPTCHA keys from hardcoded values to secure Replit environment variables, updated all server-side files to use process.env variables with fallback handling, enhanced frontend to use environment variables for reCAPTCHA site keys via VITE_RECAPTCHA_SITE_KEY, integrated Google reCAPTCHA v2 "I'm not a robot" checkbox verification into both login and registration forms with complete backend validation, created comprehensive API endpoint for secure reCAPTCHA configuration delivery, removed all sensitive credentials from .env file and code repositories ensuring production-ready security practices
 - June 30, 2025. Implemented comprehensive USD-based withdrawal system with crypto gateways and real-time features: removed internal transfer tabs and focused on crypto withdrawal gateway concept where users withdraw USD but receive equivalent cryptocurrency, integrated actual crypto logos (BTC, ETH, USDT) throughout withdrawal interface, implemented real-time balance display showing available USD funds under amount input field, added live USD-to-crypto conversion showing exact amounts user will receive in selected cryptocurrency, enhanced withdrawal form with immediate USD fund deduction upon transaction completion, implemented real-time notifications and withdrawal transaction history integration with assets page, added comprehensive validation and error handling with console debugging for transaction processing, withdrawal system now supports complete USD withdrawal via cryptocurrency networks with instant balance updates and WebSocket notifications
